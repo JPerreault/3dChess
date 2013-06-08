@@ -1,6 +1,12 @@
 window.onload = function()
 {
-	var scene, renderer, container, camera;
+	var scene, renderer, container, camera, line;
+	var mouseXOnMouseDown = mouseYOnMouseDown = 0;
+	var	targetXRotationOnMouseDown = targetXRotationOnMouseDown = 0;
+	var	mouseX = mouseY = targetX = targetY = 0;
+	this.currentWindowX = window.innerWidth ;
+	this.currentWindowY = window.innerHeight;
+	var that = this;
 	
 	init();
 	animate();
@@ -29,7 +35,7 @@ window.onload = function()
 		}
 		
 		var material = new THREE.LineBasicMaterial({color: 0x000000, opacity: 0.5});
-		var line = new THREE.Line(geometry, material);
+		line = new THREE.Line(geometry, material);
 		line.type = THREE.LinePieces;
 		scene.add(line);
 		
@@ -49,6 +55,9 @@ window.onload = function()
 		container.appendChild(renderer.domElement);
 		
 		window.addEventListener('resize', onWindowResize, false);
+		window.addEventListener( 'mousewheel', onMouseWheel, false);
+		window.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
+		window.addEventListener( 'mousedown', onMouseDown, false );
 	}
 	
 	function onWindowResize() 
@@ -59,6 +68,49 @@ window.onload = function()
 		renderer.setSize(window.innerWidth, window.innerHeight);
 	}
 	
+	function onMouseWheel()
+	{
+		var fovMAX = 160;
+		var fovMIN = 5;
+
+		camera.fov -= event.wheelDeltaY * 0.05;
+		camera.fov = Math.max(Math.min(camera.fov, fovMAX), fovMIN);
+		camera.projectionMatrix = new THREE.Matrix4().makePerspective(camera.fov, window.innerWidth / window.innerHeight, camera.near, camera.far);
+	}
+	
+	function onMouseDown(event)
+	{
+		event.preventDefault();
+		
+		//Check if the player clicked a piece (no pieces yet implemented, TODO)
+		//If they didn't click a piece, move the camera:
+
+		document.addEventListener( 'mousemove', onMouseMoveCam, false );
+		document.addEventListener( 'mouseup', onMouseUpCam, false );
+		document.addEventListener( 'mouseout', onMouseUpCam, false );
+
+		mouseXOnMouseDown = event.clientX - that.currentWindowX;
+		mouseYOnMouseDown = event.clientY - that.currentWindowY;
+		targetYRotationOnMouseDown = that.targetY;
+		targetXRotationOnMouseDown = that.targetX;
+	}
+	
+	function onMouseMoveCam(event)
+	{
+		mouseX = event.clientX - that.currentWindowX;
+		mouseY = event.clientY - that.currentWindowY;
+
+		that.targetY = targetYRotationOnMouseDown + ( mouseX - mouseXOnMouseDown ) * 0.02;
+		that.targetX = targetXRotationOnMouseDown + ( mouseY - mouseYOnMouseDown ) * 0.02;
+	}
+	
+	function onMouseUpCam(event)
+	{
+		document.removeEventListener( 'mousemove', onMouseMoveCam, false );
+		document.removeEventListener( 'mouseup', onMouseUpCam, false );
+		document.removeEventListener( 'mouseout', onMouseUpCam, false );
+	}
+	
 	function animate()
 	{
 		requestAnimationFrame(animate);
@@ -67,6 +119,9 @@ window.onload = function()
 	
 	function render()
 	{
+		line.rotation.x += ( targetX - line.rotation.x ) * 0.05;
+		line.rotation.y += ( targetY - line.rotation.y ) * 0.05;	
+		
 		camera.lookAt(scene.position);
 		renderer.render(scene, camera);
 	}
