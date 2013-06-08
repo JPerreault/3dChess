@@ -1,6 +1,7 @@
 window.onload = function()
 {
-	var scene, renderer, container, camera, line;
+	var scene, renderer, container, camera;
+	var line, test;
 	var mouseXOnMouseDown = mouseYOnMouseDown = 0;
 	var	targetXRotationOnMouseDown = targetXRotationOnMouseDown = 0;
 	var	mouseX = mouseY = targetX = targetY = 0;
@@ -39,10 +40,12 @@ window.onload = function()
 		line.type = THREE.LinePieces;
 		scene.add(line);
 		
-		var ambientLight = new THREE.AmbientLight(Math.random() * 0x202020);
+		initializePieces(size, step);
+		
+		var ambientLight = new THREE.AmbientLight(0x202020);
 		scene.add( ambientLight );
 
-		var directionalLight = new THREE.DirectionalLight(Math.random() * 0xffffff);
+		var directionalLight = new THREE.DirectionalLight(0xffffff);
 		directionalLight.position.set(0, 1, 0);
 		scene.add(directionalLight);
 
@@ -51,13 +54,23 @@ window.onload = function()
 
 		renderer = new THREE.CanvasRenderer();
 		renderer.setSize(window.innerWidth, window.innerHeight);
-
 		container.appendChild(renderer.domElement);
 		
 		window.addEventListener('resize', onWindowResize, false);
 		window.addEventListener( 'mousewheel', onMouseWheel, false);
 		window.addEventListener( 'DOMMouseScroll', onMouseWheel, false);
 		window.addEventListener( 'mousedown', onMouseDown, false );
+	}
+	
+	function initializePieces(size, step)
+	{
+		geometry = new THREE.SphereGeometry(75, 26, 18);
+		material = new THREE.MeshLambertMaterial({color: 0xffffff, shading: THREE.FlatShading, overdraw: true});
+		test = new	THREE.Mesh(geometry, material);
+		
+		test.geometry.applyMatrix(new THREE.Matrix4().makeTranslation(-size + (step/2), 75/2, 300 + step/2));
+		
+		scene.add(test);
 	}
 	
 	function onWindowResize() 
@@ -120,7 +133,10 @@ window.onload = function()
 	function render()
 	{
 		line.rotation.x += ( targetX - line.rotation.x ) * 0.05;
-		line.rotation.y += ( targetY - line.rotation.y ) * 0.05;	
+		line.rotation.y += ( targetY - line.rotation.y ) * 0.05;
+
+		test.rotation.x += ( targetX - test.rotation.x ) * 0.05;
+		test.rotation.y += ( targetY - test.rotation.y ) * 0.05;		
 		
 		camera.lookAt(scene.position);
 		renderer.render(scene, camera);
